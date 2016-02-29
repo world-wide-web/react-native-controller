@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>React Native Controllers by wix</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">React Native Controllers</h1>
+      <h2 class="project-tagline">Native IOS Navigation for React Native (navbar, tabs, drawer)</h2>
+      <a href="https://github.com/wix/react-native-controllers" class="btn">View on GitHub</a>
+      <a href="https://github.com/wix/react-native-controllers/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/wix/react-native-controllers/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <h1>
+<a id="react-native-controllers" class="anchor" href="#react-native-controllers" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>React Native Controllers</h1>
+
+<p><code>react-native-controllers</code> is a <a href="https://facebook.github.io/react-native/">React Native</a> npm extension package for iOS which provides a completely native skeleton for iOS apps, allowing you to easily wrap core native UI components without compromising on the native experience. Key benefits:</p>
+
+<ul>
+<li>Truly native navigation (instead of the JS-based <a href="https://facebook.github.io/react-native/docs/navigator-comparison.html"><code>Navigator</code></a> or the <a href="https://facebook.github.io/react-native/docs/navigatorios.html">deprecated <code>NavigatorIOS</code></a>)</li>
+<li>Truly native side menu drawer (instead of the JS-based alternatives available today)</li>
+<li>Smoother animations, improved performance and look and feel that matches the OS for all iOS versions</li>
+</ul>
+
+<p>Without <code>react-native-controllers</code>, iOS skeleton components such as <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UINavigationController_Class/"><code>UINavigatorController</code></a> or a <a href="https://www.cocoacontrols.com/search?q=drawer">side menu drawer</a> are challenging to implement natively. This forces developers to compromise on user experience to use React Native.
+<code>react-native-controllers</code> simplifies this by re-introducing <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIViewController_Class/"><code>UIViewController</code></a> into the React Native stack.</p>
+
+<blockquote>
+<p>Note: The main purpose of this package is to generate discussion around difficulties we found wrapping native iOS skeleton components with React Native. Look at this as a thought experiment with a proposed solution. If you have alternate ideas please share your feedback!</p>
+</blockquote>
+
+<h2>
+<a id="table-of-contents" class="anchor" href="#table-of-contents" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Table of contents</h2>
+
+<ul>
+<li><a href="#why-do-we-need-this-package">Why do we need this package?</a></li>
+<li><a href="#what-sacrifices-did-we-make">What sacrifices did we make?</a></li>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#usage">Usage</a></li>
+<li><a href="#available-view-controllers">Available view controllers</a></li>
+<li><a href="#credits">Credits</a></li>
+<li><a href="#license">License</a></li>
+</ul>
+
+<h2>
+<a id="why-do-we-need-this-package" class="anchor" href="#why-do-we-need-this-package" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Why do we need this package?</h2>
+
+<p>If you're already convinced you need this package, you can skip straight to <a href="#installation">Installation</a>. If not, brace yourself for a long read.</p>
+
+<h5>
+<a id="first-whats-so-great-about-react-native" class="anchor" href="#first-whats-so-great-about-react-native" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>First, what's so great about React Native?</h5>
+
+<p>At Wix, we came to React Native from a codebase of two separate fully native stacks - one for iOS (ObjectiveC) and one for Android (Java). The main benefits React Native brings to such an environment are:</p>
+
+<ul>
+<li>OTA business logic updates (fix bugs in the JS bundle without going through the app stores)</li>
+<li>Sharing business logic between iOS, Android and even web counterparts (<a href="http://techcrunch.com/2015/08/26/facebook-react-native/">demolishing silos</a>)</li>
+<li>Improving development velocity and introducing more people in the organization to app development</li>
+<li>Maintaining our existing high level of UX since our entire UI is fully native and implemented separately</li>
+</ul>
+
+<p>The last point is critical and what prevented us from adopting many of the cross-platform mobile technologies that popped up in recent years. One of the premises of React Native is that you can keep using any native UI component and won't be required to make UX compromises.</p>
+
+<h5>
+<a id="but-wait-the-ux-compromises-did-come" class="anchor" href="#but-wait-the-ux-compromises-did-come" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>But wait.. the UX compromises did come</h5>
+
+<p>After working with React Native we noticed that we were encouraged to make UX compromises in several places. Here are two examples:</p>
+
+<ul>
+<li>Navigator - Originally happy to see <a href="https://facebook.github.io/react-native/docs/navigatorios.html#content"><code>NavigatorIOS</code></a>, we were soon disappointed to see that Facebook <a href="https://facebook.github.io/react-native/docs/navigator-comparison.html#content">gave up on maintaining it</a> and the recommendation is to use the pure-JS alternative <a href="https://facebook.github.io/react-native/docs/navigator.html#content"><code>Navigator</code></a>. That seemed peculiar since using the native component for such a key element as navigation is obviously the superior UX choice. <br> There's a limit to how well you can fake it with pure JS and the small details like side swipe for back get lost. Also consider what happens if Apple decides to revamp the design of the navigation bar like they did between iOS 6 and 7. Will we really go to the length of providing two separate experiences to owners of different OS versions with the pure JS implementation?</li>
+<li>Side menu drawer - The side menu is a popular UI pattern and some of our iOS apps use it. We looked for a React Native wrapper around one of the <a href="https://www.cocoacontrols.com/search?q=drawer">many native iOS implementations</a>. We were surprised to see that we found none, although React Native for iOS has been out at the time for over a year. The React Native component community is <a href="https://react.parts/native">thriving</a> and there's a native wrapper for everything. There must be some underlying reason why all implementations for such a popular component were pure JS.</li>
+</ul>
+
+<p>It's interesting to see that both examples revolve around components that are parts of the app skeleton. Why are skeleton components so challenging to implement with native elements?</p>
+
+<h5>
+<a id="looking-for-the-underlying-challenge" class="anchor" href="#looking-for-the-underlying-challenge" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Looking for the underlying challenge</h5>
+
+<p>Our first instinct for both of the examples listed above was <em>"Hey, great! Let's make these components ourselves! It's a great void to fill for the community."</em></p>
+
+<p>We dived into the <code>NavigatorIOS</code> <a href="https://github.com/facebook/react-native/blob/master/React/Views/RCTNavigator.m">implementation</a> but things weren't as simple as we've hoped. The implementation is surprisingly complex and seems to have been done by someone very much proficient with the inner workings of the <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIKit_Framework/">UIKit</a>.</p>
+
+<p>We've hit similar walls with the side menu. One of the main problems was that side menus are based on <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIViewController_Class/"><code>UIViewController</code></a> and not <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIView_Class/"><code>UIView</code></a>. React Native steered our component to return a view.</p>
+
+<p>Furthermore, let's take a look at the standard way React Native hooks into <code>AppDelegate</code>:</p>
+
+<div class="highlight highlight-source-objc"><pre>RCTRootView *rootView = [[RCTRootView <span class="pl-c1">alloc</span>] <span class="pl-c1">initWithBundleURL:</span>jsCodeLocation
+                                                    <span class="pl-c1">moduleName:</span><span class="pl-s"><span class="pl-pds">@"</span>DefaultProject<span class="pl-pds">"</span></span>
+                                             <span class="pl-c1">initialProperties:</span><span class="pl-c1">nil</span>
+                                                 <span class="pl-c1">launchOptions:</span>launchOptions];
+self.window = [[UIWindow <span class="pl-c1">alloc</span>] <span class="pl-c1">initWithFrame:</span>[UIScreen <span class="pl-c1">mainScreen</span>].bounds];
+UIViewController *rootViewController = [[UIViewController <span class="pl-c1">alloc</span>] <span class="pl-c1">init</span>];
+rootViewController.view = rootView;
+self.window.rootViewController = rootViewController;</pre></div>
+
+<p>The entire React Native component hierarchy is contained inside a view and this view is wrapped manually in a view controller. That pretty much summed up our problem. App skeletons in iOS are built from view controllers, but it wasn't obvious to us how those fit in within the React Native world.</p>
+
+<h5>
+<a id="giving-view-controllers-a-prominent-seat-at-the-table" class="anchor" href="#giving-view-controllers-a-prominent-seat-at-the-table" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Giving view controllers a prominent seat at the table</h5>
+
+<p>If our assumption is correct, then giving view controllers a more prominent seat at the table might make skeleton components easier to implement.</p>
+
+<p>There are many ways to approach this, we've decided to start with a way that won't interfere with the inner-workings of React Native. A good start would be an optional <a href="https://www.npmjs.com/">npm</a> package that would add this functionality on top.</p>
+
+<p>With the standard way to use React Native, <code>RCTRootView</code> starts at the very top of your app hierarchy (filling the content of <code>rootViewController</code>). We wanted to move <code>RCTRootView</code> a little lower. The top of the app hierarchy will be filled with natively implemented view controllers. Inside every view controller, the content view could be a separate <code>RCTRootView</code>.</p>
+
+<p>This means that instead of a single <code>RCTRootView</code>, our app will have several ones running in parallel. It turns out that this isn't a problem and is <a href="https://github.com/facebook/react-native/blob/master/React/Base/RCTRootView.h">supported out of the box</a> by the framework. All you need to do is have a single <code>RCTBridge</code> that all of them will share. This gives all of these views the same JS execution context, which means they will easily be able to share variables and singletons.</p>
+
+<p>Let's compare the two approaches with a simple two-tab app. <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UITabBarController_Class/"><code>UITabBarController</code></a> is a good candidate for a skeleton component since it's based primarily on view controllers:</p>
+
+<p><img src="http://i.imgur.com/Siyx0JU.png" alt="Comparison Diagram"></p>
+
+<h5>
+<a id="a-few-implementation-details" class="anchor" href="#a-few-implementation-details" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>A few implementation details</h5>
+
+<p>The basis of the proposed approach is that the view controller layer is not implemented as traditional React Native components. Instead, they are implemented natively. We also want to make layouting very flexible so instead of having to write native ObjectiveC code inside Xcode to specify which view controllers you want, we prefer a declarative way.</p>
+
+<p>The natural choice to define layouts is using XML. This implies that we need to add an additional XML layout file to the project that will be saved right next to the React Native JS bundle. The native package code will then parse this XML file and instantiate the native view controllers when the app is loaded.</p>
+
+<p>The drawbacks of this external XML is that it's more difficult to update. React Native developers are used to updating everything though the JS bundle. This means the natural place for our XML is to be embedded inside the bundle. This makes for another natural choice for the XML flavor. It should be <a href="https://facebook.github.io/react/docs/jsx-in-depth.html">JSX</a> to keep things familiar.</p>
+
+<p>It isn't straightforward to use JSX for layouting things that aren't React components since JSX is <a href="https://facebook.github.io/react/docs/jsx-in-depth.html#the-transform">tightly coupled</a> with React. Our somewhat hackish solution was to override <code>React</code> in the JS modules dedicated for defining view controllers.</p>
+
+<h5>
+<a id="tldr" class="anchor" href="#tldr" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>TL;DR</h5>
+
+<p>We need this package because it allows us to <em>easily</em> wrap native components that are part of the app skeleton and rely on <code>UIViewController</code> instead of <code>UIView</code>. Some examples of these skeleton components are navigation, tabs and side menu drawer. Using this package we are able to use the original native components instead of compromising on pure JS alternatives.</p>
+
+<h2>
+<a id="what-sacrifices-did-we-make" class="anchor" href="#what-sacrifices-did-we-make" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>What sacrifices did we make?</h2>
+
+<p>By using the proposed approach, we made several scarifices that you should be aware of:</p>
+
+<ul>
+<li><p><strong>Predictable state "leaks" outside the JS realm</strong> - One of the powerful concepts of React is that components can rely only on <code>props</code> and <code>state</code> and render themselves accordingly. This means the entire app state can be made predictable and contained within these inputs. Pushing this concept further, using frameworks like <a href="https://github.com/rackt/redux">Redux</a> you can <a href="https://www.youtube.com/watch?v=xsSnOQynTHs">time travel</a> to previous states - a supercharged debugging tool.<br><br>This concept holds as long as the entire app state is located in the JS realm. As you can guess, what we're doing is "leaking" crucial app state - like the entire navigation stack - into native components like <code>UINavigationController</code>. Since this state is not owned anymore by JS, you will not be able to time travel.<br><br>In our defense, time travel is a very foreign concept to native mobile development. State is expected to be held by native OS components, that's how the entire world of native mobile development works.</p></li>
+<li><p><strong>Lack of state synchronization between JS and native</strong> - The other side of the same coin is whether we go to the trouble of synchronizing this state between the JS and native realms. This is theoretically possible, see the locking mechanism implemented in <a href="https://github.com/facebook/react-native/blob/master/React/Views/RCTNavigator.m"><code>NavigatorIOS</code></a>. We chose in favor of simplifying the implementation and ignored this problem altogether.<br><br>In our defense, we're not sure how big of an issue this actually is. The standard native API for navigation changes in <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UINavigationController_Class/#//apple_ref/occ/instm/UINavigationController/pushViewController:animated:"><code>UINavigationController</code></a> is asynchronous due to transition animations. When a controller pushes another, the point in time when the second controller is mounted isn't very well defined. The standard API doesn't provide a completion handler for this event.<br><br>We believe this decision can hold well for most common straightforward cases of in-app navigation. If we face more complicated cases, adding a completion handler to our components' push/pop JS interface may be an elegant solution.</p></li>
+</ul>
+
+<h2>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Installation</h2>
+
+<p>You need an iOS React Native project (<a href="https://facebook.github.io/react-native/docs/getting-started.html#quick-start">instructions on how to create one</a>)</p>
+
+<ol>
+<li>Run <code>npm install react-native-controllers --save</code> in your project root</li>
+<li>In Xcode, in Project Navigator (left pane), right-click on the <code>Libraries</code> &gt; <code>Add files to [project name]</code> <br> Add <code>./node_modules/react-native-controllers/ios/ReactNativeControllers.xcodeproj</code> (<a href="https://facebook.github.io/react-native/docs/linking-libraries-ios.html#step-1">screenshots</a>)</li>
+<li>In Xcode, in Project Navigator (left pane), click on your project (top) and select the <code>Build Phases</code> tab (right pane) <br> In the <code>Link Binary With Libraries</code> section add <code>libReactNativeControllers.a</code> (<a href="https://facebook.github.io/react-native/docs/linking-libraries-ios.html#step-2">screenshots</a>)</li>
+<li>In Xcode, in Project Navigator (left pane), click on your project (top) and select the <code>Build Settings</code> tab (right pane) <br> In the <code>Header Search Paths</code> section add <code>$(SRCROOT)/../node_modules/react-native-controllers/ios</code> <br> Make sure on the right to mark this new path <code>recursive</code> (<a href="https://facebook.github.io/react-native/docs/linking-libraries-ios.html#step-3">screenshots</a>)</li>
+</ol>
+
+<h2>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Usage</h2>
+
+<p>Check out the iOS example project under <a href="example"><code>./example</code></a> to see everything in action.</p>
+
+<h3>
+<a id="step-1---update-appdelegate" class="anchor" href="#step-1---update-appdelegate" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Step 1 - Update AppDelegate</h3>
+
+<p>Since <code>react-native-controllers</code> takes over the skeleton of your app, we're first going to change how React Native is invoked in <code>AppDelegate.m</code>. In Xcode, change your AppDelegate to look like this:</p>
+
+<div class="highlight highlight-source-objc"><pre>#<span class="pl-k">import</span> <span class="pl-s"><span class="pl-pds">"</span>AppDelegate.h<span class="pl-pds">"</span></span>
+#<span class="pl-k">import</span> <span class="pl-s"><span class="pl-pds">"</span>RCCManager.h<span class="pl-pds">"</span></span> <span class="pl-c">// RCC stands for ReaCtControllers</span>
+
+<span class="pl-k">@implementation</span> <span class="pl-en">AppDelegate</span>
+
+- (<span class="pl-k">BOOL</span>)<span class="pl-en">application</span><span class="pl-en">:</span>(UIApplication *)<span class="pl-smi">application</span> <span class="pl-en">didFinishLaunchingWithOptions</span><span class="pl-en">:</span>(<span class="pl-c1">NSDictionary</span> *)<span class="pl-smi">launchOptions</span>
+{
+  <span class="pl-c1">NSURL</span> *jsCodeLocation;
+
+  <span class="pl-c">// OPTION 1 - load JS code from development server</span>
+  jsCodeLocation = [<span class="pl-c1">NSURL</span> <span class="pl-c1">URLWithString:</span><span class="pl-s"><span class="pl-pds">@"</span>http://localhost:8081/index.ios.bundle?platform=ios&amp;dev=true<span class="pl-pds">"</span></span>];
+
+  <span class="pl-c">// OPTION 2 - load JS from pre-bundled file on disk</span>
+  <span class="pl-c">// jsCodeLocation = [[NSBundle mainBundle] URLForResource:@"main" withExtension:@"jsbundle"];</span>
+
+  self.<span class="pl-smi">window</span> = [[UIWindow <span class="pl-c1">alloc</span>] <span class="pl-c1">initWithFrame:</span>[UIScreen <span class="pl-c1">mainScreen</span>].bounds];
+
+  <span class="pl-c">// this is your new React Native invocation</span>
+  [[RCCManager <span class="pl-c1">sharedIntance</span>] <span class="pl-c1">initBridgeWithBundleURL:</span>jsCodeLocation];
+
+  <span class="pl-k">return</span> <span class="pl-c1">YES</span>;
+}
+
+<span class="pl-k">@end</span></pre></div>
+
+<h3>
+<a id="step-2---update-indexiosjs" class="anchor" href="#step-2---update-indexiosjs" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Step 2 - Update index.ios.js</h3>
+
+<p>With React Native, every JS file in your project is a module. With <code>react-native-controllers</code>, you can have JS modules that deal with <code>ViewControllers</code> and you can have JS modules that deal with <code>Views</code> (these are the React Native modules that you're used to). It's not recommended to deal with both in the same JS module.</p>
+
+<p>Roughly speaking, <code>ViewControllers</code> make the skeleton of your app and <code>Views</code> make the actual content of every screen. Since <code>index.ios.js</code> is where your skeleton is defined, this module will be dedicated to deal with <code>ViewControllers</code>. Normally, this would be the only module that does that and the rest of your JS files will be regular React Native files.</p>
+
+<p>You can see a complete example of <code>index.ios.js</code> <a href="example/index.ios.js">here</a>. If you don't want the full explanation of what's going on in there, just skip to the next step.</p>
+
+<h5>
+<a id="making-a-module-deal-with-viewcontrollers-instead-of-views" class="anchor" href="#making-a-module-deal-with-viewcontrollers-instead-of-views" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Making a module deal with ViewControllers instead of Views</h5>
+
+<p>To allow you to use <a href="https://facebook.github.io/react/docs/jsx-in-depth.html">JSX</a> to define your view controller hierarchy, we're going to have to hijack <code>React</code>. Don't worry, this hijack is local to this module only. That's why we don't mix the two types. Your other regular JS modules (that deal with Views) won't have this hijack.</p>
+
+<p>To perform the hijack, define <code>React</code> on the top of the module like this:</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> Controllers <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>react-native-controllers<span class="pl-pds">'</span></span>);
+<span class="pl-k">var</span> React <span class="pl-k">=</span> <span class="pl-smi">Controllers</span>.<span class="pl-en">hijackReact</span>();</pre></div>
+
+<blockquote>
+<p>Note: The React instance here is irregular. It can't do many of the things that the original class can, so keep its usage pretty close to our purpose.</p>
+</blockquote>
+
+<h5>
+<a id="defining-the-view-controller-hierarchy" class="anchor" href="#defining-the-view-controller-hierarchy" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Defining the view controller hierarchy</h5>
+
+<p>We tried to keep the syntax familiar. Define your view controller skeleton like this:</p>
+
+<div class="highlight highlight-source-js-jsx"><pre><span class="pl-k">var</span><span class="pl-smi"> MoviesApp</span><span class="pl-k"> =</span> <span class="pl-smi">Controllers</span><span class="pl-k">.</span><span class="pl-en">createClass</span>({
+  <span class="pl-en">render</span>: <span class="pl-k">function</span>() {
+<span class="pl-k">    return</span> (
+      &lt;<span class="pl-ent">DrawerControllerIOS</span> <span class="pl-e">id</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>drawer<span class="pl-pds">"</span></span> <span class="pl-e">componentLeft</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>SideMenu<span class="pl-pds">"</span></span> <span class="pl-e">componentRight</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>SideMenu<span class="pl-pds">"</span></span>&gt;
+        &lt;<span class="pl-ent">TabBarControllerIOS</span> <span class="pl-e">id</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>main<span class="pl-pds">"</span></span>&gt;
+          &lt;<span class="pl-ent">TabBarControllerIOS.Item</span> <span class="pl-e">title</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>Movies<span class="pl-pds">"</span></span> <span class="pl-e">icon</span><span class="pl-k">=</span><span class="pl-pse">{</span><span class="pl-s1"><span class="pl-en">require</span>(<span class="pl-s"><span class="pl-pds">'</span>./img/home.png<span class="pl-pds">'</span></span>)</span><span class="pl-pse">}</span>&gt;
+            &lt;<span class="pl-ent">NavigationControllerIOS</span> <span class="pl-e">title</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>Welcome<span class="pl-pds">"</span></span> <span class="pl-e">component</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>MovieListScreen<span class="pl-pds">"</span></span> <span class="pl-e">id</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>movies<span class="pl-pds">"</span></span> /&gt;
+          &lt;/<span class="pl-ent">TabBarControllerIOS.Item</span>&gt;
+          &lt;<span class="pl-ent">TabBarControllerIOS.Item</span> <span class="pl-e">title</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>Search<span class="pl-pds">"</span></span> <span class="pl-e">icon</span><span class="pl-k">=</span><span class="pl-pse">{</span><span class="pl-s1"><span class="pl-en">require</span>(<span class="pl-s"><span class="pl-pds">'</span>./img/discover.png<span class="pl-pds">'</span></span>)</span><span class="pl-pse">}</span>&gt;
+            &lt;<span class="pl-ent">ViewControllerIOS</span> <span class="pl-e">component</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>SearchScreen<span class="pl-pds">"</span></span> /&gt;
+          &lt;/<span class="pl-ent">TabBarControllerIOS.Item</span>&gt;
+        &lt;/<span class="pl-ent">TabBarControllerIOS</span>&gt;
+      &lt;/<span class="pl-ent">DrawerControllerIOS</span>&gt;
+    );
+  },
+});</pre></div>
+
+<blockquote>
+<p>Note: In this hierarchy you can only use view controllers. You can't use your traditional React Native components. For a full list of all supported view controllers see the rest of this doc.</p>
+</blockquote>
+
+<p>Some of the view controllers in the hierarchy will have to contain your views. These views are the regular React Native components that you're used to. You will normally define these components in a dedicated JS module - where <code>React</code> wasn't hijacked and you can use all of its goodness.</p>
+
+<p>To hook up a view, use the <code>component</code> attribute of the view controller in the JSX and provide the registered name of the component. Every view that you use has to be registered using <code>AppRegistry.registerComponent()</code>. For example, the movie list screen content is defined in <a href="example/MovieListScreen.js"><code>MovieListScreen.js</code></a> and there it's also registered with:</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">AppRegistry</span>.<span class="pl-en">registerComponent</span>(<span class="pl-s"><span class="pl-pds">'</span>MovieListScreen<span class="pl-pds">'</span></span>, () <span class="pl-k">=&gt;</span> MovieListScreen);</pre></div>
+
+<h5>
+<a id="require-all-the-view-components-that-you-referenced" class="anchor" href="#require-all-the-view-components-that-you-referenced" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Require all the view components that you referenced</h5>
+
+<p>We have to tell the React Native bundler that we need the components that we just referenced. The easiest way to do this and make sure their JS files are included in our bundle, is to <code>require</code> them. You can add this right before you define your view controller hierarchy:</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// require all top level react components you refer to in the layout</span>
+<span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>./SideMenu<span class="pl-pds">'</span></span>);
+<span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>./MovieListScreen<span class="pl-pds">'</span></span>);
+<span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>./SearchScreen<span class="pl-pds">'</span></span>);</pre></div>
+
+<h5>
+<a id="register-your-controller-and-set-it-as-root" class="anchor" href="#register-your-controller-and-set-it-as-root" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Register your controller and set it as root</h5>
+
+<p>Just like we register regular React Native view modules, we'll need to register the view controller module we've just defined. In the end of <code>index.ios.js</code> add the following lines:</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">ControllerRegistry</span>.<span class="pl-en">registerController</span>(<span class="pl-s"><span class="pl-pds">'</span>MoviesApp<span class="pl-pds">'</span></span>, () <span class="pl-k">=&gt;</span> MoviesApp);
+
+<span class="pl-c">// this line makes the app actually start and initialize</span>
+<span class="pl-smi">ControllerRegistry</span>.<span class="pl-en">setRootController</span>(<span class="pl-s"><span class="pl-pds">'</span>MoviesApp<span class="pl-pds">'</span></span>);</pre></div>
+
+<p>The last line is the magic line that bootstraps our entire app. When you set your controller (that you've just defined in JS) as root with <code>ControllerRegistry.setRootController()</code>, behind the scenes the native code sets it as <code>appDelegate.window.rootViewController</code>. Here you can see that the module that you've just defined is actually a <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIViewController_Class/"><code>UIViewController</code></a> and not a <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIView_Class/"><code>UIView</code></a>.</p>
+
+<h3>
+<a id="step-3---implement-all-top-level-components" class="anchor" href="#step-3---implement-all-top-level-components" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Step 3 - Implement all top level components</h3>
+
+<p>The view controller hierarchy we've defined in <code>index.ios.js</code> references the top level screens of your app. These screens are regular React Native views. They are the exact same components you've been writing up until now.</p>
+
+<p>In the previous step we've referenced 3 top level components: <code>SideMenu</code>, <code>MovieListScreen</code>, <code>SearchScreen</code>. The best practice is to implement each of them as its own JS module. You can see them implemented here: <a href="example/SideMenu.js"><code>SideMenu.js</code></a>, <a href="example/MovieListScreen.js"><code>MovieListScreen.js</code></a>, <a href="example/SearchScreen.js"><code>SearchScreen.js</code></a>.</p>
+
+<p>As you can see, these are standard React Native components. They don't require any special changes due to our package. The only requirement is that all of them are registered using React Native's <code>AppRegistry.registerComponent()</code>. Only top level components referenced by the view controller hierarchy need to be registered. Register them by adding the following line at the end:</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">AppRegistry</span>.<span class="pl-en">registerComponent</span>(<span class="pl-s"><span class="pl-pds">'</span>MovieListScreen<span class="pl-pds">'</span></span>, () <span class="pl-k">=&gt;</span> MovieListScreen);</pre></div>
+
+<p>When implementing your components, you may need to interact with one of the view controllers. For example, create a button that pushes a new screen to the navigation controller. You have simple JS API for this purpose available by <code>require('react-native-controllers')</code>. This API is documented under the list of <a href="#available-view-controllers">available view controllers</a>.</p>
+
+<h2>
+<a id="available-view-controllers" class="anchor" href="#available-view-controllers" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Available View Controllers</h2>
+
+<p>The package contains implementations for the following view controllers that you can use in your app skeleton:</p>
+
+<ul>
+<li>
+<a href="#navigationcontrollerios">NavigationControllerIOS</a> - Native navigator wrapper around <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UINavigationController_Class/"><code>UINavigationController</code></a>
+</li>
+<li>
+<a href="#drawercontrollerios">DrawerControllerIOS</a> - Native side menu drawer wrapper around <a href="https://github.com/mutualmobile/MMDrawerController"><code>MMDrawerController</code></a>
+</li>
+<li>
+<a href="#tabbarcontrollerios">TabBarControllerIOS</a> - Native tabs wrapper around <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UITabBarController_Class/"><code>UITabBarController</code></a>
+</li>
+<li>
+<a href="#viewcontrollerios">ViewControllerIOS</a> - Generic empty view controller wrapper around <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIViewController_Class/"><code>UIViewController</code></a>
+</li>
+</ul>
+
+<p>These wrappers are very simple. You can also add your own if you find missing React Native components that are based on <code>UIViewController</code> instead of <code>UIView</code>.</p>
+
+<h3>
+<a id="navigationcontrollerios" class="anchor" href="#navigationcontrollerios" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>NavigationControllerIOS</h3>
+
+<p>Native navigator wrapper around <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UINavigationController_Class/"><code>UINavigationController</code></a>. This view controller is a replacement for React Native's <a href="https://facebook.github.io/react-native/docs/navigatorios.html#content"><code>NavigatorIOS</code></a> that is no longer maintained by Facebook.</p>
+
+<h5>
+<a id="props" class="anchor" href="#props" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Props</h5>
+
+<div class="highlight highlight-source-js-jsx"><pre>&lt;<span class="pl-ent">NavigationControllerIOS</span> <span class="pl-e">title</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>Welcome<span class="pl-pds">"</span></span> <span class="pl-e">component</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>MovieListScreen<span class="pl-pds">"</span></span> <span class="pl-e">id</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>movies<span class="pl-pds">"</span></span> /&gt;</pre></div>
+
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>title</td>
+<td>Title displayed on the navigation bar on the root view controller (initial route)</td>
+</tr>
+<tr>
+<td>component</td>
+<td>
+<a href="https://github.com/wix/react-native-controllers#step-3---implement-all-top-level-components">Registered name</a> of the component that provides the view for the root view controller (initial route)</td>
+</tr>
+<tr>
+<td>id</td>
+<td>Unique ID used to reference this view controller in future API calls</td>
+</tr>
+<tr>
+<td>passProps</td>
+<td>Simple serializable object that will pass as props to the pushed component</td>
+</tr>
+</tbody>
+</table>
+
+<h5>
+<a id="methods" class="anchor" href="#methods" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Methods</h5>
+
+<p>Get the instance with <code>Controllers.NavigationControllerIOS(id)</code></p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> Controllers <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>react-native-controllers<span class="pl-pds">'</span></span>);
+<span class="pl-k">var</span> navigationController <span class="pl-k">=</span> <span class="pl-smi">Controllers</span>.<span class="pl-en">NavigationControllerIOS</span>(<span class="pl-s"><span class="pl-pds">"</span>movies<span class="pl-pds">"</span></span>);</pre></div>
+
+<ul>
+<li>
+<strong>push(params)</strong> - push a new screen</li>
+</ul>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>./PushedScreen<span class="pl-pds">'</span></span>);
+<span class="pl-smi">navigationController</span>.<span class="pl-c1">push</span>({
+  title<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>New Screen<span class="pl-pds">"</span></span>, <span class="pl-c">// nav bar title of the pushed screen (optional)</span>
+  component<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>PushedScreen<span class="pl-pds">"</span></span>, <span class="pl-c">// the unique ID registered with AppRegistry.registerComponent (required)</span>
+  passProps<span class="pl-k">:</span> {}, <span class="pl-c">// simple serializable object that will pass as props to the pushed component (optional)</span>
+  animated<span class="pl-k">:</span> <span class="pl-c1">true</span> <span class="pl-c">// does the push have a transition animation (optional, default true)</span>
+});</pre></div>
+
+<blockquote>
+<p>Important Note: Every pushed component should be registered with <code>AppRegistry.registerComponent()</code> like the top level component in a tradition React Native app. This is because every pushed component is actually a new React root under the hood.</p>
+</blockquote>
+
+<ul>
+<li>
+<strong>pop()</strong> - pop the current screen</li>
+</ul>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">navigationController</span>.<span class="pl-c1">pop</span>({
+  animated<span class="pl-k">:</span> <span class="pl-c1">true</span> <span class="pl-c">// does the pop have a transition animation (optional, default true)</span>
+);</pre></div>
+
+<ul>
+<li>
+<strong>setLeftButton(params)</strong> - set the left button of the navigation bar</li>
+</ul>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">navigationController</span>.<span class="pl-en">setLeftButton</span>({
+  title<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>Button Title<span class="pl-pds">"</span></span>,
+  <span class="pl-en">onPress</span><span class="pl-k">:</span> <span class="pl-k">function</span>() {
+    <span class="pl-c">// on press event handler</span>
+  }
+});</pre></div>
+
+<h5>
+<a id="examples" class="anchor" href="#examples" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Examples</h5>
+
+<p><a href="example/FavoritesScreen.js"><code>FavoritesScreen.js</code></a>, <a href="example/PushedScreen.js"><code>PushedScreen.js</code></a></p>
+
+<h3>
+<a id="drawercontrollerios" class="anchor" href="#drawercontrollerios" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>DrawerControllerIOS</h3>
+
+<p>Native side menu drawer wrapper around <a href="https://github.com/mutualmobile/MMDrawerController"><code>MMDrawerController</code></a>. This view controller lets you add a configurable side menu to your app (either on the left, right or both). Unlike most side menu implementations available for React Native, this side menu isn't implemented in JS and is completely native.</p>
+
+<h5>
+<a id="props-1" class="anchor" href="#props-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Props</h5>
+
+<div class="highlight highlight-source-js-jsx"><pre>&lt;<span class="pl-ent">DrawerControllerIOS</span> <span class="pl-e">id</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>drawer<span class="pl-pds">"</span></span> <span class="pl-e">componentLeft</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>SideMenu<span class="pl-pds">"</span></span> <span class="pl-e">componentRight</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>SideMenu<span class="pl-pds">"</span></span>&gt;
+  // center view controller here (the body of the app)
+&lt;/<span class="pl-ent">DrawerControllerIOS</span>&gt;</pre></div>
+
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>componentLeft</td>
+<td>
+<a href="https://github.com/wix/react-native-controllers#step-3---implement-all-top-level-components">Registered name</a> of the component that provides the view for the left side menu</td>
+</tr>
+<tr>
+<td>componentRight</td>
+<td>
+<a href="https://github.com/wix/react-native-controllers#step-3---implement-all-top-level-components">Registered name</a> of the component that provides the view for the right side menu</td>
+</tr>
+<tr>
+<td>id</td>
+<td>Unique ID used to reference this view controller in future API calls</td>
+</tr>
+</tbody>
+</table>
+
+<h5>
+<a id="methods-1" class="anchor" href="#methods-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Methods</h5>
+
+<p>Get the instance with <code>Controllers.DrawerControllerIOS(id)</code></p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> Controllers <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>react-native-controllers<span class="pl-pds">'</span></span>);
+<span class="pl-k">var</span> drawerController <span class="pl-k">=</span> <span class="pl-smi">Controllers</span>.<span class="pl-en">DrawerControllerIOS</span>(<span class="pl-s"><span class="pl-pds">"</span>drawer<span class="pl-pds">"</span></span>);</pre></div>
+
+<ul>
+<li>
+<strong>open(params)</strong> - open the side menu</li>
+</ul>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">drawerController</span>.<span class="pl-c1">open</span>({
+  side<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>right<span class="pl-pds">"</span></span>,
+  animated<span class="pl-k">:</span> <span class="pl-c1">true</span>
+});</pre></div>
+
+<ul>
+<li>
+<strong>close(params)</strong> - close the side menu</li>
+</ul>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">drawerController</span>.<span class="pl-c1">close</span>({
+  side<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>right<span class="pl-pds">"</span></span>,
+  animated<span class="pl-k">:</span> <span class="pl-c1">true</span>
+});</pre></div>
+
+<ul>
+<li>
+<strong>toggle(params)</strong> - toggle the side menu (open if close, close if open)</li>
+</ul>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">drawerController</span>.<span class="pl-en">toggle</span>({
+  side<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>left<span class="pl-pds">"</span></span>,
+  animated<span class="pl-k">:</span> <span class="pl-c1">true</span>
+});</pre></div>
+
+<ul>
+<li>
+<strong>setStyle(params)</strong> - set the side menu animation type</li>
+</ul>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">drawerController</span>.<span class="pl-en">setStyle</span>({
+  animationType<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>slide<span class="pl-pds">"</span></span> <span class="pl-c">// slide, slideAndScale, parallax, door</span>
+});</pre></div>
+
+<h5>
+<a id="examples-1" class="anchor" href="#examples-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Examples</h5>
+
+<p><a href="example/MovieListScreen.js"><code>MovieListScreen.js</code></a></p>
+
+<h3>
+<a id="tabbarcontrollerios" class="anchor" href="#tabbarcontrollerios" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>TabBarControllerIOS</h3>
+
+<p>Native tabs wrapper around <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UITabBarController_Class/"><code>UITabBarController</code></a>. This view controller lets display native tabs in your app, much like React Native's <a href="https://facebook.github.io/react-native/docs/tabbarios.html#content"><code>TabBarIOS</code></a>.</p>
+
+<h5>
+<a id="props-2" class="anchor" href="#props-2" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Props</h5>
+
+<div class="highlight highlight-source-js-jsx"><pre>&lt;<span class="pl-ent">TabBarControllerIOS</span> <span class="pl-e">id</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>main<span class="pl-pds">"</span></span>&gt;
+  &lt;<span class="pl-ent">TabBarControllerIOS.Item</span> <span class="pl-e">title</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>Movies<span class="pl-pds">"</span></span> <span class="pl-e">icon</span><span class="pl-k">=</span><span class="pl-pse">{</span><span class="pl-s1"><span class="pl-en">require</span>(<span class="pl-s"><span class="pl-pds">'</span>./img/home.png<span class="pl-pds">'</span></span>)</span><span class="pl-pse">}</span>&gt;
+    // view controller here (the body of the tab)
+  &lt;/<span class="pl-ent">TabBarControllerIOS.Item</span>&gt;
+  &lt;<span class="pl-ent">TabBarControllerIOS.Item</span> <span class="pl-e">title</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>Search<span class="pl-pds">"</span></span> <span class="pl-e">icon</span><span class="pl-k">=</span><span class="pl-pse">{</span><span class="pl-s1"><span class="pl-en">require</span>(<span class="pl-s"><span class="pl-pds">'</span>./img/discover.png<span class="pl-pds">'</span></span>)</span><span class="pl-pse">}</span>&gt;
+    // view controller here (the body of the tab)
+  &lt;/<span class="pl-ent">TabBarControllerIOS.Item</span>&gt;
+&lt;/<span class="pl-ent">TabBarControllerIOS</span>&gt;</pre></div>
+
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>Unique ID used to reference this view controller in future API calls</td>
+</tr>
+</tbody>
+</table>
+
+<table>
+<thead>
+<tr>
+<th>Item Attribute</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>title</td>
+<td>Title displayed on the tab label</td>
+</tr>
+<tr>
+<td>icon</td>
+<td>Local asset image for the tab icon (unselected state), use <code>require</code> like with a <a href="https://facebook.github.io/react-native/docs/image.html">local image</a>
+</td>
+</tr>
+<tr>
+<td>selectedIcon</td>
+<td>Local asset image for the tab icon (selected state), use <code>require</code> like with a <a href="https://facebook.github.io/react-native/docs/image.html">local image</a>
+</td>
+</tr>
+</tbody>
+</table>
+
+<blockquote>
+<p>Note: For best results on iOS, supply icon images that are 50x50 pixels for retina screen, make sure you add the <code>@2x</code> suffix for the filename on disk (eg. <code>home@2x.png</code>)</p>
+</blockquote>
+
+<h5>
+<a id="methods-2" class="anchor" href="#methods-2" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Methods</h5>
+
+<p>Currently not implemented</p>
+
+<h3>
+<a id="viewcontrollerios" class="anchor" href="#viewcontrollerios" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>ViewControllerIOS</h3>
+
+<p>Generic empty view controller wrapper around <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIViewController_Class/"><code>UIViewController</code></a>. This view controller is useful when you need to specify a view controller but you don't want anything special except a holder for your view. For example, a tab body without a navigation controller.</p>
+
+<h5>
+<a id="props-3" class="anchor" href="#props-3" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Props</h5>
+
+<div class="highlight highlight-source-js-jsx"><pre>&lt;<span class="pl-ent">ViewControllerIOS</span> <span class="pl-e">component</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>SearchScreen<span class="pl-pds">"</span></span> /&gt;</pre></div>
+
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>component</td>
+<td>
+<a href="https://github.com/wix/react-native-controllers#step-3---implement-all-top-level-components">Registered name</a> of the component that provides the view for this view controller</td>
+</tr>
+</tbody>
+</table>
+
+<h5>
+<a id="methods-3" class="anchor" href="#methods-3" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Methods</h5>
+
+<p>Currently not implemented</p>
+
+<h2>
+<a id="credits" class="anchor" href="#credits" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Credits</h2>
+
+<ul>
+<li>
+<a href="https://github.com/facebook/react-native">React Native</a> framework by Facebook</li>
+<li>
+<a href="https://github.com/mutualmobile/MMDrawerController">MMDrawerController</a> component by mutualmobile</li>
+</ul>
+
+<h2>
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>License</h2>
+
+<p>The MIT License.</p>
+
+<p>See <a href="LICENSE">LICENSE</a></p>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/wix/react-native-controllers">React Native Controllers</a> is maintained by <a href="https://github.com/wix">wix</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
