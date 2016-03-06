@@ -30,7 +30,7 @@
 <li>Smoother animations, improved performance and look and feel that matches the OS for all iOS versions</li>
 </ul>
 
-<p>Without <code>react-native-controllers</code>, iOS skeleton components such as <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UINavigationController_Class/"><code>UINavigatorController</code></a> or a <a href="https://www.cocoacontrols.com/search?q=drawer">side menu drawer</a> are challenging to implement natively. This forces developers to compromise on user experience to use React Native.
+<p>Without <code>react-native-controllers</code>, iOS skeleton components such as <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UINavigationController_Class/"><code>UINavigationController</code></a> or a <a href="https://www.cocoacontrols.com/search?q=drawer">side menu drawer</a> are challenging to implement natively. This forces developers to compromise on user experience to use React Native.
 <code>react-native-controllers</code> simplifies this by re-introducing <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIViewController_Class/"><code>UIViewController</code></a> into the React Native stack.</p>
 
 <blockquote>
@@ -338,6 +338,10 @@ self.window.rootViewController = rootViewController;</pre></div>
 <td>passProps</td>
 <td>Simple serializable object that will pass as props to the pushed component</td>
 </tr>
+<tr>
+<td>style</td>
+<td>Style the navigation bar, see <a href="#styling-navigation">Styling Navigation</a> below for all available styles</td>
+</tr>
 </tbody>
 </table>
 
@@ -359,7 +363,9 @@ self.window.rootViewController = rootViewController;</pre></div>
   title<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>New Screen<span class="pl-pds">"</span></span>, <span class="pl-c">// nav bar title of the pushed screen (optional)</span>
   component<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>PushedScreen<span class="pl-pds">"</span></span>, <span class="pl-c">// the unique ID registered with AppRegistry.registerComponent (required)</span>
   passProps<span class="pl-k">:</span> {}, <span class="pl-c">// simple serializable object that will pass as props to the pushed component (optional)</span>
-  animated<span class="pl-k">:</span> <span class="pl-c1">true</span> <span class="pl-c">// does the push have a transition animation (optional, default true)</span>
+  style<span class="pl-k">:</span> {}, <span class="pl-c">// style the navigation bar for the pushed screen (optional, see "Styling Navigation" below)</span>
+  animated<span class="pl-k">:</span> <span class="pl-c1">true</span>, <span class="pl-c">// does the push have a transition animation (optional, default true)</span>
+  backButtonTitle<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>Back<span class="pl-pds">"</span></span> <span class="pl-c">// override the nav bar back button title for the pushed screen (optional) </span>
 });</pre></div>
 
 <blockquote>
@@ -386,6 +392,31 @@ self.window.rootViewController = rootViewController;</pre></div>
     <span class="pl-c">// on press event handler</span>
   }
 });</pre></div>
+
+<h5>
+<a id="styling-navigation" class="anchor" href="#styling-navigation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Styling Navigation</h5>
+
+<p>You can apply styling to the navigation bar appearance and behavior by setting the <code>style</code> property when defining your <code>NavigationControllerIOS</code> or by passing the <code>style</code> object when pushing a new screen. </p>
+
+<p>Please note that styles are remembered for future pushed screens. For example, if you change the navigation bar color, all future pushed screens will keep this style and have the same changed colors. If you wish to have different colors in a pushed screen, simply override the style by passing the <code>style</code> object when calling <code>push()</code>.</p>
+
+<p>All styles are optional, this is the format of the style object:</p>
+
+<div class="highlight highlight-source-js"><pre>{
+  navBarTextColor<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>#000000<span class="pl-pds">'</span></span>, <span class="pl-c">// change the text color of the title</span>
+  navBarBackgroundColor<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>#f7f7f7<span class="pl-pds">'</span></span>, <span class="pl-c">// change the background color of the nav bar</span>
+  navBarButtonColor<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>#007aff<span class="pl-pds">'</span></span>, <span class="pl-c">// change the button colors of the nav bar (eg. the back button)</span>
+  navBarHidden<span class="pl-k">:</span> <span class="pl-c1">false</span>, <span class="pl-c">// make the nav bar hidden</span>
+  navBarHideOnScroll<span class="pl-k">:</span> <span class="pl-c1">false</span>, <span class="pl-c">// make the nav bar hidden only after the user starts to scroll</span>
+  drawUnderNavBar<span class="pl-k">:</span> <span class="pl-c1">false</span>, <span class="pl-c">// make the nav bar translucent and draw the screen content under it</span>
+  drawUnderTabBar<span class="pl-k">:</span> <span class="pl-c1">false</span>, <span class="pl-c">// make the tab bar translucent and draw the screen content under it</span>
+  statusBarBlur<span class="pl-k">:</span> <span class="pl-c1">false</span>, <span class="pl-c">// blur the area under the status bar, works best with navBarHidden:true</span>
+  navBarBlur<span class="pl-k">:</span> <span class="pl-c1">false</span>, <span class="pl-c">// blur the entire nav bar, works best with drawUnderNavBar:true</span>
+  tabBarHidden<span class="pl-k">:</span> <span class="pl-c1">false</span>, <span class="pl-c">// make the screen content hide the tab bar</span>
+  statusBarHideWithNavBar<span class="pl-k">:</span> <span class="pl-c1">false</span> <span class="pl-c">// hide the status bar if the nav bar is also hidden, useful for navBarHidden:true</span>
+}</pre></div>
+
+<p>See all the styles in action by running the <a href="example">example</a> project in Xcode (under the "Favorites" tab).</p>
 
 <h5>
 <a id="examples" class="anchor" href="#examples" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Examples</h5>
@@ -425,6 +456,14 @@ self.window.rootViewController = rootViewController;</pre></div>
 <tr>
 <td>id</td>
 <td>Unique ID used to reference this view controller in future API calls</td>
+</tr>
+<tr>
+<td>passPropsLeft</td>
+<td>Simple serializable object that will pass as props to the left component</td>
+</tr>
+<tr>
+<td>passPropsRight</td>
+<td>Simple serializable object that will pass as props to the right component</td>
 </tr>
 </tbody>
 </table>
