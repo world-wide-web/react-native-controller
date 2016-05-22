@@ -5,43 +5,49 @@ var utils = require('./utils');
 var resolveAssetSource = require('react-native/Libraries/Image/resolveAssetSource');
 var processColor = require('react-native/Libraries/StyleSheet/processColor');
 
-var _controllerRegistry = {};
+var controllerRegistry = {};
 
-function _getRandomId() {
-  return (Math.random()*1e20).toString(36);
+function getRandomId() {
+  return (Math.random() * 1e20).toString(36);
 }
 
-function _processProperties(properties) {
-  for (var property in properties) {
-    if (properties.hasOwnProperty(property)) {
-      if (property === 'icon' || property.endsWith('Icon')) {
-        properties[property] = resolveAssetSource(properties[property]);
+function processProperties(properties) {
+  for (var i in properties) {
+    if (properties.hasOwnProperty(i)) {
+      const property = properties[i];
+      if (i === 'icon' || i.endsWith('Icon')) {
+        properties[i] = resolveAssetSource(property);
+        continue;
       }
-      if (property === 'color' || property.endsWith('Color')) {
-        properties[property] = processColor(properties[property]);
+      if (i === 'color' || i.endsWith('Color')) {
+        properties[i] = processColor(property);
+        continue;
       }
-      if (property === 'buttons' || property.endsWith('Buttons')) {
-        _processButtons(properties[property]);
+      if (i === 'buttons' || i.endsWith('Buttons')) {
+        processButtons(property);
+        continue;
       }
     }
   }
 }
 
-function _setListener(callbackId, func) {
+function setListener(callbackId, func) {
   return NativeAppEventEmitter.addListener(callbackId, (...args) => func(...args));
 }
 
-function _processButtons(buttons) {
-  if (!buttons) return;
+function processButtons(buttons) {
+  if (buttons == null) {
+    return;
+  }
   var unsubscribes = [];
   for (var i = 0 ; i < buttons.length ; i++) {
     var button = buttons[i];
-    _processProperties(button);
+    processProperties(button);
     if (typeof button.onPress === "function") {
-      var onPressId = _getRandomId();
+      var onPressId = getRandomId();
       var onPressFunc = button.onPress;
       button.onPress = onPressId;
-      var unsubscribe = _setListener(onPressId, onPressFunc);
+      var unsubscribe = setListener(onPressId, onPressFunc);
       unsubscribes.push(unsubscribe);
     }
   }
@@ -52,28 +58,135 @@ function _processButtons(buttons) {
   };
 }
 
-var Controllers = {
+function createElement(type, props, ...children) {
+  props || (props = {});
+  children = utils.flattenDeep(children);
+  if (children.length) {
+    props.children = children;
+  }
+  if (type instanceof Function) {
+    if (type.prototype.render) {
+      return new type({props}, {}).render();
+    }
+    return type(props);
+  }
+  if (type.render) {
+    return type.render.call({props});
+  }
+  processProperties(props);
+  if (props && props.style) {
+    processProperties(props.style);
+  }
+  return {
+    type: type.name, props, children
+  };
+}
 
-  createClass: function (app) {
+export function getController(id) {
+  const {address, type = 'ViewControllerIOS'} = id;
+  return ViewControllerIOS[type].get(address);
+}
+
+export class ViewControllerIOS {
+  //
+  static instances = {};
+  static get(address) {
+    return this.instances[address] || (
+      this.instances[address] = new this(address)
+    );
+  }
+  //
+  constructor(address) {
+    this.address = address;
+  }
+  async getNavigationController() {
+    return getController(await RCCManager.ViewControllerIOS(this.address, 'navigationController'));
+  }
+  async getParentViewController() {
+    return getController(await RCCManager.ViewControllerIOS(this.address, 'parentViewController'));
+  }
+  async getChildViewControllers() {
+    return Promise.all(await RCCManager.ViewControllerIOS(this.address, 'childViewControllers').map(getController));
+  }
+}
+ViewControllerIOS.ViewControllerIOS = ViewControllerIOS;
+
+export class NavigationControllerIOS extends ViewControllerIOS {
+  //
+  static instances = {};
+  //
+  push(params) {
+    var unsubscribes = [];
+    if (params['style']) {
+      processProperties(params['style']);
+    }
+    if (params['leftButtons']) {
+      var unsubscribe = processButtons(params['leftButtons']);
+      unsubscribes.push(unsubscribe);
+    }
+    if (params['rightButtons']) {
+      var unsubscribe = processButtons(params['rightButtons']);
+      unsubscribes.push(unsubscribe);
+    }
+    RCCManager.NavigationControllerIOS(this.address, "push", params);
+    return function() {
+      for (var i = 0 ; i < unsubscribes.length ; i++) {
+        if (unsubscribes[i]) { unsubscribes[i](); }
+      }
+    };
+  }
+  pop(params) {
+    RCCManager.NavigationControllerIOS(this.address, "pop", params);
+  }
+  setLeftButtons(buttons, animated = false) {
+    var unsubscribe = processButtons(buttons);
+    RCCManager.NavigationControllerIOS(this.address, "setButtons", {buttons: buttons, side: "left", animated: animated});
+    return unsubscribe;
+  }
+  setRightButtons(buttons, animated = false) {
+    var unsubscribe = processButtons(buttons);
+    RCCManager.NavigationControllerIOS(this.address, "setButtons", {buttons: buttons, side: "right", animated: animated});
+    return unsubscribe;
+  }
+}
+ViewControllerIOS.NavigationControllerIOS = NavigationControllerIOS;
+
+export class TabBarControllerIOS extends ViewControllerIOS {
+  //
+  static instances = {};
+  //
+  setHidden(params) {
+    return RCCManager.TabBarControllerIOS(this.address, "setTabBarHidden", params);
+  }
+}
+ViewControllerIOS.TabBarControllerIOS = TabBarControllerIOS;
+
+export class DrawerControllerIOS extends ViewControllerIOS {
+  //
+  static instances = {};
+  //
+  open(params) {
+    return RCCManager.DrawerControllerIOS(this.address, "open", params);
+  }
+  close(params) {
+    return RCCManager.DrawerControllerIOS(this.address, "close", params);
+  }
+  toggle(params) {
+    return RCCManager.DrawerControllerIOS(this.address, "toggle", params);
+  }
+  setStyle(params) {
+    return RCCManager.DrawerControllerIOS(this.address, "setStyle", params);
+  }
+}
+ViewControllerIOS.DrawerControllerIOS = DrawerControllerIOS;
+
+var Controllers = {
+  createClass(app) {
     return app;
   },
-
-  hijackReact: function () {
+  hijackReact() {
     return {
-      createElement: function(type, props) {
-        var children = Array.prototype.slice.call(arguments, 2);
-        var flatChildren = utils.flattenDeep(children);
-        _processProperties(props);
-        if (props['style']) {
-          _processProperties(props['style']);
-        }
-        return {
-          'type': type.name,
-          'props': props,
-          'children': flatChildren
-        };
-      },
-
+      createElement,
       ControllerRegistry: Controllers.ControllerRegistry,
       TabBarControllerIOS: {name: 'TabBarControllerIOS', Item: {name: 'TabBarControllerIOS.Item'}},
       NavigationControllerIOS: {name: 'NavigationControllerIOS'},
@@ -81,100 +194,33 @@ var Controllers = {
       DrawerControllerIOS: {name: 'DrawerControllerIOS'},
     };
   },
-
   ControllerRegistry: {
-    registerController: function (appKey, getControllerFunc) {
-      _controllerRegistry[appKey] = getControllerFunc();
+    registerController(appKey, getControllerFunc) {
+      controllerRegistry[appKey] = getControllerFunc();
     },
-    setRootController: function (appKey, animationType = 'none') {
-      var controller = _controllerRegistry[appKey];
+    setRootController(appKey, animationType = 'none') {
+      var controller = controllerRegistry[appKey];
       if (controller === undefined) return;
-      var layout = controller.render();
+      var layout = createElement(controller);
       RCCManager.setRootController(layout, animationType);
     }
   },
-
-  NavigationControllerIOS: function (id) {
-    return {
-      push: function (params) {
-        var unsubscribes = [];
-        if (params['style']) {
-          _processProperties(params['style']);
-        }
-        if (params['leftButtons']) {
-          var unsubscribe = _processButtons(params['leftButtons']);
-          unsubscribes.push(unsubscribe);
-        }
-        if (params['rightButtons']) {
-          var unsubscribe = _processButtons(params['rightButtons']);
-          unsubscribes.push(unsubscribe);
-        }
-        RCCManager.NavigationControllerIOS(id, "push", params);
-        return function() {
-          for (var i = 0 ; i < unsubscribes.length ; i++) {
-            if (unsubscribes[i]) { unsubscribes[i](); }
-          }
-        };
-      },
-      pop: function (params) {
-        RCCManager.NavigationControllerIOS(id, "pop", params);
-      },
-      setLeftButton: function () {
-        console.error('setLeftButton is deprecated, see setLeftButtons');
-      },
-      setLeftButtons: function (buttons, animated = false) {
-        var unsubscribe = _processButtons(buttons);
-        RCCManager.NavigationControllerIOS(id, "setButtons", {buttons: buttons, side: "left", animated: animated});
-        return unsubscribe;
-      },
-      setRightButtons: function (buttons, animated = false) {
-        var unsubscribe = _processButtons(buttons);
-        RCCManager.NavigationControllerIOS(id, "setButtons", {buttons: buttons, side: "right", animated: animated});
-        return unsubscribe;
-      }
-    };
-  },
-
-  DrawerControllerIOS: function (id) {
-    return {
-      open: function (params) {
-        return RCCManager.DrawerControllerIOS(id, "open", params);
-      },
-      close: function (params) {
-        return RCCManager.DrawerControllerIOS(id, "close", params);
-      },
-      toggle: function (params) {
-        return RCCManager.DrawerControllerIOS(id, "toggle", params);
-      },
-      setStyle: function (params) {
-        return RCCManager.DrawerControllerIOS(id, "setStyle", params);
-      }
-    };
-  },
-
-  TabBarControllerIOS: function (id) {
-    return {
-      setHidden: function (params) {
-        return RCCManager.TabBarControllerIOS(id, "setTabBarHidden", params);
-      }
-    };
-  },
-
-  Modal: {
-    showLightBox: function(params) {
-      _processProperties(params.style);
+  getController,
+  modal: {
+    showLightBox(params) {
+      processProperties(params.style);
       RCCManager.modalShowLightBox(params);
     },
-    dismissLightBox: function() {
+    dismissLightBox() {
       RCCManager.modalDismissLightBox();
     },
-    showController: function(appKey, animationType = 'slide-down') {
-      var controller = _controllerRegistry[appKey];
+    showController(appKey, animationType = 'slide-down') {
+      var controller = controllerRegistry[appKey];
       if (controller === undefined) return;
-      var layout = controller.render();
+      var layout = createElement(controller);
       RCCManager.showController(layout, animationType);
     },
-    dismissController: function(animationType = 'slide-down') {
+    dismissController(animationType = 'slide-down') {
       RCCManager.dismissController(animationType);
     }
   },

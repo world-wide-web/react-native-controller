@@ -27,35 +27,20 @@
 
 - (instancetype)init
 {
-  self = [super init];
-  if (self)
+  if (self = [super init])
   {
-    self.modulesRegistry = [@{} mutableCopy];
-    
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onRNReload) name:RCTReloadNotification object:nil];
   }
   return self;
 }
 
--(void)onRNReload
-{
-  [self.modulesRegistry removeAllObjects];
-}
-
--(void)registerController:(UIViewController*)controller componentId:(NSString*)componentId componentType:(NSString*)componentType
+-(void)registerController:(UIViewController*)controller componentId:(NSString*)componentId
 {
   if (controller == nil || componentId == nil)
   {
     return;
   }
 
-  NSMutableDictionary *componentsDic = self.modulesRegistry[componentType];
-  if (componentsDic == nil)
-  {
-    componentsDic = [@{} mutableCopy];
-    self.modulesRegistry[componentType] = componentsDic;
-  }
-
+  NSMutableDictionary *componentsDic = self.modulesRegistry;
   if (componentsDic[componentId])
   {
     [self.sharedBridge.redBox showErrorMessage:[NSString stringWithFormat:@"Controllers: controller with id %@ is already registered. Make sure all of the controller id's you use are unique.", componentId]];
@@ -63,24 +48,10 @@
   componentsDic[componentId] = controller;
 }
 
--(id)getControllerWithId:(NSString*)componentId componentType:(NSString*)componentType
+-(id)getControllerWithAddress:(NSNumber*)address
 {
-  if (componentId == nil)
-  {
-    return nil;
-  }
-
-  id component = nil;
-
-  NSMutableDictionary *componentsDic = self.modulesRegistry[componentType];
-  if (componentsDic != nil)
-  {
-    component = componentsDic[componentId];
-  }
-
-  return component;
+  return (__bridge id)((void *)address.unsignedIntegerValue);
 }
-
 
 -(void)initBridgeWithBundleURL:(NSURL *)bundleURL
 {
