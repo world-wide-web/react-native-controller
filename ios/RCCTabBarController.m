@@ -4,7 +4,9 @@
 
 @implementation RCCTabBarController
 
-- (instancetype)initWithProps:(NSDictionary *)props children:(NSArray *)children bridge:(RCTBridge *)bridge
+- (instancetype)initWithProps:(NSDictionary *)props
+                     children:(NSArray *)children
+                       bridge:(RCTBridge *)bridge
 {
   self = [super init];
   if (!self) return nil;
@@ -49,29 +51,30 @@
   return self;
 }
 
-- (void)performAction:(NSString*)performAction actionParams:(NSDictionary*)actionParams bridge:(RCTBridge *)bridge completion:(void (^)(void))completion
+- (void)performAction:(NSString*)performAction
+         actionParams:(NSDictionary*)actionParams
+               bridge:(RCTBridge *)bridge
+             resolver:(RCTPromiseResolveBlock)resolve
+             rejecter:(RCTPromiseRejectBlock)reject
 {
-    if ([performAction isEqualToString:@"setTabBarHidden"])
+  if ([performAction isEqualToString:@"setTabBarHidden"])
+  {
+    BOOL hidden = [actionParams[@"hidden"] boolValue];
+    [UIView animateWithDuration: ([actionParams[@"animated"] boolValue] ? 0.45 : 0)
+                          delay: 0
+         usingSpringWithDamping: 0.75
+          initialSpringVelocity: 0
+                        options: (hidden ? UIViewAnimationOptionCurveEaseIn : UIViewAnimationOptionCurveEaseOut)
+                     animations:^()
     {
-        BOOL hidden = [actionParams[@"hidden"] boolValue];
-        [UIView animateWithDuration: ([actionParams[@"animated"] boolValue] ? 0.45 : 0)
-                              delay: 0
-             usingSpringWithDamping: 0.75
-              initialSpringVelocity: 0
-                            options: (hidden ? UIViewAnimationOptionCurveEaseIn : UIViewAnimationOptionCurveEaseOut)
-                         animations:^()
-         {
-             self.tabBar.transform = hidden ? CGAffineTransformMakeTranslation(0, self.tabBar.frame.size.height) : CGAffineTransformIdentity;
-         }
-                         completion:^(BOOL finished)
-        {
-            if (completion != nil)
-            {
-                completion();
-            }
-        }];
-        return;
-    }
+      self.tabBar.transform = hidden ? CGAffineTransformMakeTranslation(0, self.tabBar.frame.size.height) : CGAffineTransformIdentity;
+     }
+                     completion:^(BOOL finished)
+    {
+      resolve(nil);
+    }];
+    return;
+  }
 }
 
 @end

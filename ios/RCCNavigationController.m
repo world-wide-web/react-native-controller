@@ -9,7 +9,9 @@
 NSString const *CALLBACK_ASSOCIATED_KEY = @"RCCNavigationController.CALLBACK_ASSOCIATED_KEY";
 NSString const *CALLBACK_ASSOCIATED_ID = @"RCCNavigationController.CALLBACK_ASSOCIATED_ID";
 
-- (instancetype)initWithProps:(NSDictionary *)props children:(NSArray *)children bridge:(RCTBridge *)bridge
+- (instancetype)initWithProps:(NSDictionary *)props
+                     children:(NSArray *)children
+                       bridge:(RCTBridge *)bridge
 {
   NSString *component = props[@"component"];
   if (!component) return nil;

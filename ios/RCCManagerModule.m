@@ -31,11 +31,8 @@ RCT_EXPORT_MODULE(RCCManager);
 
 - (NSDictionary *)constantsToExport
 {
-    return @{
-             //Error codes
-             @"RCCManagerModuleCantCreateControllerErrorCode" : @(RCCManagerModuleCantCreateControllerErrorCode),
-             @"RCCManagerModuleCantFindTabControllerErrorCode" : @(RCCManagerModuleCantFindTabControllerErrorCode),
-             };
+    return @{@"RCCManagerModuleCantCreateControllerErrorCode" : @(RCCManagerModuleCantCreateControllerErrorCode),
+             @"RCCManagerModuleCantFindTabControllerErrorCode" : @(RCCManagerModuleCantFindTabControllerErrorCode)};
 }
 
 +(UIViewController*)appRootViewController
@@ -63,7 +60,8 @@ RCT_EXPORT_METHOD(
 setRootController:(NSDictionary*)layout animationType:(NSString*)animationType)
 {
     // create the new controller
-    UIViewController *controller = [RCCViewController controllerWithLayout:layout bridge:[[RCCManager sharedIntance] getBridge]];
+    RCTBridge *bridge = [[RCCManager sharedIntance] getBridge];
+    UIViewController *controller = [RCCViewController controllerWithLayout:layout bridge:bridge];
     if (controller == nil) return;
 
     id<UIApplicationDelegate> appDelegate = [UIApplication sharedApplication].delegate;
@@ -77,7 +75,7 @@ setRootController:(NSDictionary*)layout animationType:(NSString*)animationType)
     else
     {
         UIViewController *presentedViewController = nil;
-        if(appDelegate.window.rootViewController.presentedViewController != nil)
+        if (appDelegate.window.rootViewController.presentedViewController != nil)
             presentedViewController = appDelegate.window.rootViewController.presentedViewController;
         else
             presentedViewController = appDelegate.window.rootViewController;
@@ -87,8 +85,9 @@ setRootController:(NSDictionary*)layout animationType:(NSString*)animationType)
         [appDelegate.window.rootViewController.view addSubview:snapshot];
         [presentedViewController dismissViewControllerAnimated:NO completion:nil];
         
-        [UIView animateWithDuration:0.35 delay:0 options:UIViewAnimationOptionCurveEaseIn animations:^()
-         {
+        [UIView animateWithDuration:0.35 delay:0 options:UIViewAnimationOptionCurveEaseIn
+                         animations:^()
+        {
              if (animationType == nil || [animationType isEqualToString:@"slide-down"])
              {
                  snapshot.transform = CGAffineTransformMakeTranslation(0, snapshot.frame.size.height);
@@ -97,50 +96,94 @@ setRootController:(NSDictionary*)layout animationType:(NSString*)animationType)
              {
                  snapshot.alpha = 0;
              }
-         }
+        }
                          completion:^(BOOL finished)
-         {
-             [snapshot removeFromSuperview];
-         }];
+        {
+            [snapshot removeFromSuperview];
+        }];
     }
 }
 
 RCT_EXPORT_METHOD(
-NavigationControllerIOS:(NSString*)controllerId performAction:(NSString*)performAction actionParams:(NSDictionary*)actionParams)
+ViewControllerIOS:(NSNumber*)controllerAddress
+    performAction:(NSString*)performAction
+     actionParams:(NSDictionary*)actionParams
+         resolver:(RCTPromiseResolveBlock)resolve
+         rejecter:(RCTPromiseRejectBlock)reject)
 {
-  if (!controllerId || !performAction) return;
-  RCCNavigationController* controller = [[RCCManager sharedIntance] getControllerWithId:controllerId componentType:@"NavigationControllerIOS"];
-  if (!controller || ![controller isKindOfClass:[RCCNavigationController class]]) return;
-  return [controller performAction:performAction actionParams:actionParams bridge:[[RCCManager sharedIntance] getBridge]];
-}
-
-RCT_EXPORT_METHOD(
-DrawerControllerIOS:(NSString*)controllerId performAction:(NSString*)performAction actionParams:(NSDictionary*)actionParams)
-{
-  if (!controllerId || !performAction) return;
-  RCCDrawerController* controller = [[RCCManager sharedIntance] getControllerWithId:controllerId componentType:@"DrawerControllerIOS"];
-  if (!controller || ![controller isKindOfClass:[RCCDrawerController class]]) return;
-  return [controller performAction:performAction actionParams:actionParams bridge:[[RCCManager sharedIntance] getBridge]];
-}
-
-RCT_EXPORT_METHOD(
-TabBarControllerIOS:(NSString*)controllerId performAction:(NSString*)performAction actionParams:(NSDictionary*)actionParams resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
-{
-    if (!controllerId || !performAction)
+    if (!controllerAddress || !performAction)
     {
-        [RCCManagerModule handleRCTPromiseRejectBlock:reject
-                                                error:[RCCManagerModule rccErrorWithCode:RCCManagerModuleMissingParamsErrorCode description:@"missing params"]];
+        NSError *error = [RCCManagerModule rccErrorWithCode:RCCManagerModuleMissingParamsErrorCode
+                                                description:@"missing params"];
+        [RCCManagerModule handleRCTPromiseRejectBlock:reject error:error];
         return;
     }
     
-    RCCTabBarController* controller = [[RCCManager sharedIntance] getControllerWithId:controllerId componentType:@"TabBarControllerIOS"];
+    RCCViewController* controller = [[RCCManager sharedIntance] getControllerWithAddress:controllerAddress];
     if (!controller || ![controller isKindOfClass:[RCCTabBarController class]])
     {
-        [RCCManagerModule handleRCTPromiseRejectBlock:reject
-                                                error:[RCCManagerModule rccErrorWithCode:RCCManagerModuleCantFindTabControllerErrorCode description:@"could not find UITabBarController"]];
+        NSError *error = [RCCManagerModule rccErrorWithCode:RCCManagerModuleCantFindTabControllerErrorCode
+                                                description:@"could not find UIViewController"];
+        [RCCManagerModule handleRCTPromiseRejectBlock:reject error:error];
         return;
     }
-    [controller performAction:performAction actionParams:actionParams bridge:[[RCCManager sharedIntance] getBridge] completion:^(){ resolve(nil); }];
+    [controller performAction:performAction
+                 actionParams:actionParams
+                       bridge:[[RCCManager sharedIntance] getBridge]
+                     resolver:resolve
+                     rejecter:reject];
+}
+
+RCT_EXPORT_METHOD(
+NavigationControllerIOS:(NSNumber*)controllerAddress
+          performAction:(NSString*)performAction
+           actionParams:(NSDictionary*)actionParams)
+{
+    if (!controllerAddress || !performAction) return;
+    RCCNavigationController* controller = [[RCCManager sharedIntance] getControllerWithAddress:controllerAddress];
+    if (!controller || ![controller isKindOfClass:[RCCNavigationController class]]) return;
+    [controller performAction:performAction actionParams:actionParams bridge:[[RCCManager sharedIntance] getBridge]];
+}
+
+RCT_EXPORT_METHOD(
+DrawerControllerIOS:(NSNumber*)controllerAddress
+      performAction:(NSString*)performAction
+       actionParams:(NSDictionary*)actionParams)
+{
+    if (!controllerAddress || !performAction) return;
+    RCCDrawerController* controller = [[RCCManager sharedIntance] getControllerWithAddress:controllerAddress];
+    if (!controller || ![controller isKindOfClass:[RCCDrawerController class]]) return;
+    [controller performAction:performAction actionParams:actionParams bridge:[[RCCManager sharedIntance] getBridge]];
+}
+
+RCT_EXPORT_METHOD(
+TabBarControllerIOS:(NSNumber*)controllerAddress
+      performAction:(NSString*)performAction
+       actionParams:(NSDictionary*)actionParams
+           resolver:(RCTPromiseResolveBlock)resolve
+           rejecter:(RCTPromiseRejectBlock)reject)
+{
+    if (!controllerAddress || !performAction)
+    {
+        NSError *error = [RCCManagerModule rccErrorWithCode:RCCManagerModuleMissingParamsErrorCode
+                                                description:@"missing params"];
+        [RCCManagerModule handleRCTPromiseRejectBlock:reject error:error];
+        return;
+    }
+    
+    RCCTabBarController* controller = [[RCCManager sharedIntance] getControllerWithAddress:controllerAddress];
+    if (!controller || ![controller isKindOfClass:[RCCTabBarController class]])
+    {
+        NSError *error = [RCCManagerModule rccErrorWithCode:RCCManagerModuleCantFindTabControllerErrorCode
+                                                description:@"could not find UITabBarController"];
+        [RCCManagerModule handleRCTPromiseRejectBlock:reject error:error];
+        return;
+    }
+    [controller performAction:performAction
+                 actionParams:actionParams
+                       bridge:[[RCCManager sharedIntance] getBridge]
+                     resolver:resolve
+                     rejecter:reject];
 }
 
 RCT_EXPORT_METHOD(

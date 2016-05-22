@@ -61,13 +61,6 @@ const NSInteger BLUR_NAVBAR_TAG = 78264802;
     controller = [[RCCDrawerController alloc] initWithProps:props children:children bridge:bridge];
   }
 
-  // register the controller if we have an id
-  NSString *componentId = props[@"id"];
-  if (controller && componentId)
-  {
-    [[RCCManager sharedIntance] registerController:controller componentId:componentId componentType:type];
-  }
-
   return controller;
 }
 
@@ -76,10 +69,32 @@ const NSInteger BLUR_NAVBAR_TAG = 78264802;
   NSString *component = props[@"component"];
   if (!component) return nil;
 
-  NSDictionary *passProps = props[@"passProps"];
-  NSDictionary *navigatorStyle = props[@"style"];
+  NSMutableDictionary *injectedPassProps = props[@"passProps"];
+  injectedPassProps[@"controllerId"] = @{@"address": [NSNumber numberWithUnsignedLong:(unsigned long)self],
+                                         @"type": @"ViewControllerIOS"};
+  
+  RCTRootView *reactView = [[RCTRootView alloc] initWithBridge:bridge
+                                                    moduleName:component
+                                             initialProperties:injectedPassProps];
+  if (!reactView) return nil;
 
-  RCTRootView *reactView = [[RCTRootView alloc] initWithBridge:bridge moduleName:component initialProperties:passProps];
+  self = [super init];
+  if (!self) return nil;
+
+  [self commonInit:reactView navigatorStyle:props[@"style"]];
+
+  return self;
+}
+
+- (instancetype)initWithComponent:(NSString *)component passProps:(NSDictionary *)passProps navigatorStyle:(NSDictionary*)navigatorStyle bridge:(RCTBridge *)bridge
+{
+  NSMutableDictionary *injectedPassProps = [NSMutableDictionary dictionaryWithDictionary:passProps];
+  injectedPassProps[@"controllerId"] = @{@"address": [NSNumber numberWithUnsignedLong:(unsigned long)self],
+                                         @"type": @"ViewControllerIOS"};
+  
+  RCTRootView *reactView = [[RCTRootView alloc] initWithBridge:bridge
+                                                    moduleName:component
+                                             initialProperties:injectedPassProps];
   if (!reactView) return nil;
 
   self = [super init];
@@ -90,17 +105,28 @@ const NSInteger BLUR_NAVBAR_TAG = 78264802;
   return self;
 }
 
-- (instancetype)initWithComponent:(NSString *)component passProps:(NSDictionary *)passProps navigatorStyle:(NSDictionary*)navigatorStyle bridge:(RCTBridge *)bridge
+- (void)performAction:(NSString*)performAction
+         actionParams:(NSDictionary*)actionParams
+               bridge:(RCTBridge *)bridge
+             resolver:(RCTPromiseResolveBlock)resolve
+             rejecter:(RCTPromiseRejectBlock)reject
 {
-  RCTRootView *reactView = [[RCTRootView alloc] initWithBridge:bridge moduleName:component initialProperties:passProps];
-  if (!reactView) return nil;
-
-  self = [super init];
-  if (!self) return nil;
-
-  [self commonInit:reactView navigatorStyle:navigatorStyle];
-
-  return self;
+  if ([performAction isEqualToString:@"navigationController"])
+  {
+    resolve(@{@"address": [NSNumber numberWithUnsignedLong:(unsigned long)self.navigationController],
+              @"type": @"NavigationControllerIOS"});
+    return;
+  }
+  if ([performAction isEqualToString:@"parentViewController"])
+  {
+    resolve(@{@"address": [NSNumber numberWithUnsignedLong:(unsigned long)self.parentViewController],
+              @"type": @"NavigationControllerIOS"});
+    return;
+  }
+  if ([performAction isEqualToString:@"childViewControllers"])
+  {
+    return;
+  }
 }
 
 - (void)commonInit:(RCTRootView*)reactView navigatorStyle:(NSDictionary*)navigatorStyle
