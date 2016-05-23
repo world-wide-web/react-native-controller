@@ -1,6 +1,6 @@
 {
   "name": "react-native-controller",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Provide a way to set up view controllers with JavaScript.",
   "main": "index.js",
   "repository": {
@@ -13,7 +13,17 @@
     "view",
     "controller"
   ],
-  "author": "world-wide-web <world-wide-web@foxmail.com>",
+  "author": "rocman <rocman@vip.qq.com>",
+  "maintainers": [
+    {
+      "name": "world-wide-web",
+      "email": "world-wide-web@foxmail.com>"
+    },
+    {
+      "name": "rocman",
+      "email": "rocman@vip.qq.com"
+    }
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/world-wide-web/react-native-controller/issues"
